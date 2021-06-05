@@ -9,6 +9,25 @@ class Monster(Entity):
 
         self.has_touch_the_floor = False
 
+    def hunt_player(self, player_pos):
+
+        if player_pos.x < self.rect.x:
+
+            self.movement[0] = -1
+            self.orientation = 'left'
+            self.change_animation(1)
+
+        elif player_pos.x > self.rect.x:
+            self.movement[0] = 1
+            self.orientation = 'right'
+            self.change_animation(1)
+
+        else:
+            self.movement[0] = 0
+            self.change_animation(0)
+
+        self.jump()
+
 class FireMonster(Monster):
 
     def __init__(self, game, x, y, orientation='right'):

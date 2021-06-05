@@ -5,6 +5,7 @@ from textures import init_textures
 from blocks.stone import Stone
 from blocks.wood import WoodPlatform
 from blocks.can_broken_wood import CanBrokenWoodPlatform
+from blocks.totem import Totem
 from entities.monster import FireMonster
 from random import randint
 
@@ -14,6 +15,8 @@ class Game:
     def __init__(self, screen, clock):
 
         init_textures()
+
+        self.processing_functions = ('display', 'update', 'update_entities')
 
         self.pressed = {}
         self.scroll = [0, 0]
@@ -30,7 +33,6 @@ class Game:
         self.entities.append(self.all_monsters)
 
         self.maps = get_all_maps()
-        self.all_can_broken_wood_platforms = []
         self.all_blocks = []
         self.load_map(0)
 
@@ -45,6 +47,8 @@ class Game:
 
     def run(self, run):
 
+        pygame.display.set_caption(f'A little platform\'s game ({int(self.clock.get_fps())} fps)')
+
         run = self.handling_events(run)
         self.update_elements()
         self.display_elements()
@@ -55,9 +59,26 @@ class Game:
 
     def update_elements(self):
 
+        self.update_entities()
+
+        self.player.check_movements(self.pressed)
+
         for block in self.all_blocks:
-            if isinstance(block, CanBrokenWoodPlatform):
+            if isinstance(block, Totem):
+                player_mov = block.move_player(self.player.rect)
+
+                if player_mov is not None:
+
+                    self.player.movement[0] += player_mov[0]
+                    self.player.movement[1] += player_mov[1]
+
+            elif isinstance(block, CanBrokenWoodPlatform):
                 block.check_timer()
+
+        self.player.little_jump(5, self.pressed)
+        self.scroll_map()
+
+    def update_entities(self):
 
         for entity in self.entities:
 
@@ -70,17 +91,20 @@ class Game:
                 for sub_entity in entity:
                     sub_entity.update()
 
-        self.player.check_movements(self.pressed)
-        self.player.little_jump(5, self.pressed)
-        self.scroll_map()
+        for monster in self.all_monsters:
+            monster.hunt_player(self.player.rect)
 
     def display_elements(self):
 
         self.screen.fill((0, 150, 220))
         self.surface.fill((0, 150, 220))
 
-        for stone in self.all_blocks:
-            self.surface.blit(stone.image, (stone.rect.x - self.scroll[0], stone.rect.y - self.scroll[1]))
+        for block in self.all_blocks:
+            self.surface.blit(block.image, (block.rect.x - self.scroll[0], block.rect.y - self.scroll[1]))
+
+        for block in self.all_blocks:
+            if isinstance(block, Totem):
+                block.draw_elastic(self.player.rect, self.scroll)
 
         self.blit_entities()
 
@@ -102,6 +126,39 @@ class Game:
 
             if event.type == pygame.QUIT:
                 run = False
+
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+
+                if event.button == 1:
+
+                    for block in self.all_blocks:
+                        if isinstance(block, Totem):
+
+                            rect = pygame.rect.Rect(
+                                block.rect.x - self.scroll[0],
+                                block.rect.y - self.scroll[1],
+                                block.rect.width,
+                                block.rect.height
+                            )
+
+                            if rect.collidepoint((event.pos[0]//2, event.pos[1]//2)):
+
+                                block.elastic.is_active = not block.elastic.is_active
+
+                elif event.button == 3:
+
+                    for block in self.all_blocks:
+                        if isinstance(block, Totem):
+
+                            block.elastic.is_active = False
+
+            elif event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_SPACE:
+
+                    for block in self.all_blocks:
+                        if isinstance(block, Totem):
+                            block.elastic.is_active = True
 
             elif event.type == pygame.VIDEORESIZE:
 
@@ -132,10 +189,12 @@ class Game:
             for tile in row:
                 if tile == 1:
                     self.all_blocks.append(Stone((x * 32, y * 32)))
-                if tile == 2:
+                elif tile == 2:
                     self.all_blocks.append(WoodPlatform((x * 32, y * 32)))
-                if tile == 3:
+                elif tile == 3:
                     self.all_blocks.append(CanBrokenWoodPlatform((x * 32, y * 32)))
+                elif tile == 4:
+                    self.all_blocks.append(Totem(x * 32, y * 32, self.surface, 300))
                 x += 1
 
             y -= 1
@@ -156,11 +215,11 @@ class Game:
                 if entity.orientation == 'right':
 
                     self.surface.blit(entity.image, (entity.rect.x - self.scroll[0],
-                                                     entity.rect.y - 16 - self.scroll[1]))
+                                                     entity.rect.y - entity.offset - self.scroll[1]))
 
                 else:
                     self.surface.blit(pygame.transform.flip(entity.image, True, False),
-                                      (entity.rect.x - self.scroll[0], entity.rect.y - 16 - self.scroll[1]))
+                                      (entity.rect.x - self.scroll[0], entity.rect.y - entity.offset - self.scroll[1]))
 
             else:
 
@@ -169,8 +228,10 @@ class Game:
                     if sub_entity.orientation == 'right':
 
                         self.surface.blit(sub_entity.image,
-                                          (sub_entity.rect.x - self.scroll[0], sub_entity.rect.y - 16 - self.scroll[1]))
+                                          (sub_entity.rect.x - self.scroll[0]
+                                           , sub_entity.rect.y - sub_entity.offset - self.scroll[1]))
 
                     else:
                         self.surface.blit(pygame.transform.flip(sub_entity.image, True, False),
-                                          (sub_entity.rect.x - self.scroll[0], sub_entity.rect.y - 16 - self.scroll[1]))
+                                          (sub_entity.rect.x - self.scroll[0],
+                                           sub_entity.rect.y - sub_entity.offset - self.scroll[1]))

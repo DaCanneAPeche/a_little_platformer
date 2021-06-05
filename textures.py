@@ -40,12 +40,12 @@ textures = []
 
 
 def init_textures():
-    tile_sheet = TileSheet('assets/tile_sheet.png', 32, 32, 2, 2)
-    player_sheet = SpriteSheet('assets/sprites_sheets/player.png', 32, 32, 8, 5)
+    tile_sheet = TileSheet('assets/tile_sheet.png', 32, 32, 3, 2)
+    player_sheet = SpriteSheet('assets/sprites_sheets/player.png', 32, 32, 8, 9)
     fire_monster_sheet = SpriteSheet('assets/sprites_sheets/fire_monster.png', 32, 32, 8, 5)
 
     player_idle_animation = player_sheet.load_animation(0, 5)
-    player_run_animation = player_sheet.load_animation(1, 8)
+    player_run_animation = player_sheet.load_animation(1, 9)
     player_animations = [player_idle_animation, player_run_animation]
 
     fire_idle_animation = fire_monster_sheet.load_animation(0, 8)
@@ -56,6 +56,7 @@ def init_textures():
     wood = tile_sheet.get_a_tile(0, 1)
     can_broken_wood = tile_sheet.get_a_tile(1, 0)
     broken_wood = tile_sheet.get_a_tile(1, 1)
+    totem = tile_sheet.get_a_tile(2, 0)
 
     textures.append(player_animations)
     textures.append(fire_monster_animations)
@@ -63,6 +64,7 @@ def init_textures():
     textures.append(wood)
     textures.append(can_broken_wood)
     textures.append(broken_wood)
+    textures.append(totem)
 
 
 def get_a_texture(texture_number):

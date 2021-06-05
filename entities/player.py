@@ -7,13 +7,14 @@ class Player(Entity):
 
     def __init__(self, game, x, y, velocity):
 
-        super().__init__(game, x, y, 0, 1, velocity, player=True)
+        super().__init__(game, x, y, 0, 1, velocity, player=True, offset=10)
 
-        self.rect.height = 16
+        self.rect.height = 22
+
         self.max_health = 6
         self.health = self.max_health
 
-        self.health_bar = HealthBar(self, self.max_health, self.health, offset=(4, -3), multiplier=4)
+        self.health_bar = HealthBar(self, self.max_health, self.health, offset=(4, -5), multiplier=4)
 
     def update_health_bar(self, scroll):
 
@@ -25,12 +26,12 @@ class Player(Entity):
 
     def check_movements(self, pressed):
 
-        if pressed[pygame.K_RIGHT]:
+        if pressed[pygame.K_d]:
             self.movement[0] = self.velocity
             self.orientation = 'right'
             self.change_animation(1)
 
-        elif pressed[pygame.K_LEFT]:
+        elif pressed[pygame.K_q]:
             self.movement[0] = -1 * self.velocity
             self.orientation = 'left'
             self.change_animation(1)
@@ -39,7 +40,7 @@ class Player(Entity):
             self.movement[0] = 0
             self.change_animation(0)
 
-        if pressed[pygame.K_UP]:
+        if pressed[pygame.K_z]:
 
             self.jump()
 
@@ -52,6 +53,6 @@ class Player(Entity):
 
     def little_jump(self, minimum, pressed):
 
-        if self.air_timer >= minimum and not pressed[pygame.K_UP] and self.movement[1] < 0:
+        if self.air_timer >= minimum and not pressed[pygame.K_z] and self.movement[1] < 0:
 
             self.y_momentum += 0.05

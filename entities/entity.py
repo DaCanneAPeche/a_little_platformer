@@ -11,7 +11,9 @@ def collision_test(rect, tiles):
 class Entity:
 
     def __init__(self, game, x, y, animation_number, attack, velocity, orientation='right', default_animation=0,
-                 player=False):
+                 player=False, offset=16):
+
+        self.offset = offset
 
         self.player = player
         self.attack = attack
@@ -46,7 +48,7 @@ class Entity:
     def apply_gravity(self):
 
         self.movement[1] += self.y_momentum
-        self.y_momentum += 0.02
+        self.y_momentum += 0.007
         if self.y_momentum > 3:
             self.y_momentum = 3
 
@@ -64,7 +66,7 @@ class Entity:
 
     def jump(self):
         if self.air_timer == 0:
-            self.movement[1] = -5
+            self.movement[1] = -4
             self.air_timer = 1
 
     def animation(self):
