@@ -12,7 +12,6 @@ class Block:
                               "left": True
                               }
         self.image = get_a_texture(texture_nb)
-
         self.rect = self.image.get_rect()
 
         self.rect.x, self.rect.y = coordinates

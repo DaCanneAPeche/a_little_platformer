@@ -1,17 +1,18 @@
 from textures import get_a_texture
+from hud.health_bar import HealthBar
 
 
 def collision_test(rect, tiles):
     hit_list = []
     for tile in tiles:
-        if rect.colliderect(tile.rect):
+        if rect.colliderect(tile.rect) and tile.rect != rect:
             hit_list.append(tile)
     return hit_list
 
 class Entity:
 
     def __init__(self, game, x, y, animation_number, attack, velocity, orientation='right', default_animation=0,
-                 player=False, offset=16):
+                 player=False, offset=16, health=2, health_offset=None, health_multipier=4):
 
         self.offset = offset
 
@@ -44,6 +45,10 @@ class Entity:
         self.animation_cool_down = 6
         self.animation_time_after_last_frame = 0
         self.animation_key = 0
+
+        self.max_health = health
+        self.health = self.max_health
+        self.health_bar = HealthBar(self, self.max_health, self.health, offset=health_offset, multiplier=health_multipier)
 
     def apply_gravity(self):
 
@@ -91,38 +96,59 @@ class Entity:
             self.actual_animation = self.animations[animations_key]
             self.animation_key = 0
 
-    def move(self):
-
-        tiles = self.game.all_blocks
+    def move(self, tiles):
 
         self.collisions = {'top': False, 'bottom': False, 'right': False, 'left': False}
         self.rect.move_ip(self.movement[0], 0)
         hit_list = collision_test(self.rect, tiles)
+        print(hit_list)
         for tile in hit_list:
-            if self.movement[0] > 0 and tile.stopping_sides.get('left'):
-                self.rect.right = tile.rect.left
-                self.collisions['right'] = True
-            elif self.movement[0] < 0 and tile.stopping_sides.get('right'):
-                self.rect.left = tile.rect.right
-                self.collisions['left'] = True
+            if isinstance(tile, Entity) and not self.player:
+                if self.movement[0] > 0:
+                    self.rect.right = tile.rect.left
+                    self.collisions['right'] = True
+                elif self.movement[0] < 0:
+                    self.rect.left = tile.rect.right
+                    self.collisions['left'] = True
+            elif not isinstance(tile, Entity):
+                if self.movement[0] > 0 and tile.stopping_sides.get('left'):
+                    self.rect.right = tile.rect.left
+                    self.collisions['right'] = True
+                elif self.movement[0] < 0 and tile.stopping_sides.get('right'):
+                    self.rect.left = tile.rect.right
+                    self.collisions['left'] = True
         self.rect.move_ip(0, self.movement[1])
         hit_list = collision_test(self.rect, tiles)
         for tile in hit_list:
-            if self.movement[1] > 0 and tile.stopping_sides.get('top') and self.rect.bottom <= abs(tile.rect.top) + 5:
-                self.rect.bottom = tile.rect.top
-                self.collisions['bottom'] = True
-                if str(tile.__class__) == '<class \'blocks.can_broken_wood.CanBrokenWoodPlatform\'>' and self.player:
-                    tile.start_timer()
-            elif self.movement[1] < 0 and tile.stopping_sides.get('bottom'):
-                self.rect.top = tile.rect.bottom
-                self.collisions['top'] = True
+            if isinstance(tile, Entity) and not self.player:
+                if self.movement[1] > 0:
+                    self.rect.bottom = tile.rect.top
+                    self.collisions['bottom'] = True
+                elif self.movement[1] < 0:
+                    self.rect.top = tile.rect.bottom
+                    self.collisions['top'] = True
 
-    def update(self):
+            elif not isinstance(tile, Entity):
+                if self.movement[1] > 0 and tile.stopping_sides.get('top') and self.rect.bottom <= abs(tile.rect.top) + 5:
+                    self.rect.bottom = tile.rect.top
+                    self.collisions['bottom'] = True
+                    if str(tile.__class__) == '<class \'blocks.can_broken_wood.CanBrokenWoodPlatform\'>' and self.player:
+                        tile.start_timer()
+                elif self.movement[1] < 0 and tile.stopping_sides.get('bottom'):
+                    self.rect.top = tile.rect.bottom
+                    self.collisions['top'] = True
+
+    def update(self, tiles):
 
         self.apply_gravity()
         self.animation()
+        self.update_health_bar(self.game.scroll)
 
-        self.move()
+        self.move(tiles)
+
+    def update_health_bar(self, scroll):
+
+        self.health_bar.update_bar(self.health, scroll)
 
     def remove(self):
 

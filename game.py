@@ -7,7 +7,7 @@ from blocks.wood import WoodPlatform
 from blocks.can_broken_wood import CanBrokenWoodPlatform
 from blocks.totem import Totem
 from entities.monster import FireMonster
-from random import randint
+from random import randint, choice
 
 
 class Game:
@@ -42,8 +42,8 @@ class Game:
 
         self.clock = clock
         for i in range(3):
-            x = randint(-165, 165)
-            self.all_monsters.append(FireMonster(self, x, 0, 'left'))
+            x = randint(0, 165)
+            self.all_monsters.append(FireMonster(self, x, 0, choice(('left', 'right')), speed=1))
 
     def run(self, run):
 
@@ -84,12 +84,12 @@ class Game:
 
             if not type(entity) == list:
 
-                entity.update()
+                entity.update(self.all_blocks + self.all_monsters)
 
             else:
 
                 for sub_entity in entity:
-                    sub_entity.update()
+                    sub_entity.update(self.all_blocks + self.all_monsters)
 
         for monster in self.all_monsters:
             monster.hunt_player(self.player.rect)
@@ -107,8 +107,6 @@ class Game:
                 block.draw_elastic(self.player.rect, self.scroll)
 
         self.blit_entities()
-
-        self.player.update_health_bar(self.scroll)
 
         surf = self.surface
 
@@ -160,22 +158,6 @@ class Game:
                         if isinstance(block, Totem):
                             block.elastic.is_active = True
 
-            elif event.type == pygame.VIDEORESIZE:
-
-                if self.screen.get_width() < 600:
-                    self.surface = pygame.transform.scale(self.surface,
-                                                          (self.surface.get_width(), self.screen.get_height()))
-
-                else:
-                    self.surface = pygame.transform.scale(self.surface,
-                                                          (self.surface.get_width(), self.screen.get_height() // 2))
-
-                pygame.display.update()
-
-            elif event.type == pygame.VIDEOEXPOSE:
-
-                self.screen.fill((0, 0, 0))
-
         return run
 
     def load_map(self, map_number):
@@ -220,6 +202,7 @@ class Game:
                 else:
                     self.surface.blit(pygame.transform.flip(entity.image, True, False),
                                       (entity.rect.x - self.scroll[0], entity.rect.y - entity.offset - self.scroll[1]))
+                entity.health_bar.draw()
 
             else:
 
@@ -235,3 +218,5 @@ class Game:
                         self.surface.blit(pygame.transform.flip(sub_entity.image, True, False),
                                           (sub_entity.rect.x - self.scroll[0],
                                            sub_entity.rect.y - sub_entity.offset - self.scroll[1]))
+
+                    sub_entity.health_bar.draw()

@@ -1,24 +1,14 @@
 import pygame
 from entities.entity import Entity
-from huv.health_bar import HealthBar
 
 
 class Player(Entity):
 
     def __init__(self, game, x, y, velocity):
 
-        super().__init__(game, x, y, 0, 1, velocity, player=True, offset=10)
+        super().__init__(game, x, y, 0, 1, velocity, player=True, offset=10, health=6, health_offset=(4, -5))
 
         self.rect.height = 22
-
-        self.max_health = 6
-        self.health = self.max_health
-
-        self.health_bar = HealthBar(self, self.max_health, self.health, offset=(4, -5), multiplier=4)
-
-    def update_health_bar(self, scroll):
-
-        self.health_bar.update_bar(self.health, scroll)
 
     def damage(self, amount):
 
