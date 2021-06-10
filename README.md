@@ -9,8 +9,8 @@ move with :
 -right : d
 ```
   
-click on a totem for active the correspondant elastic
-right click : desactive all elastics
+click on a totem for active the correspondant elastic, 
+right click : desactive all elastics, 
 space : active all elastics
 
 ## IT IS NOT FINISHED
